@@ -1,18 +1,27 @@
 import {
     Link,
-    Redirect,
-    Route,
-    Switch,
     useLocation,
     useParams,
+    Navigate,
+    Outlet,
+    useRoutes,
 } from 'react-router-dom';
 import {useState} from 'react';
+
+const UsersLayout = () => {
+    return (
+        <>
+            <Outlet/>
+        </>
+    );
+};
 
 const HomePage = () => {
     return (
         <>
             <h1>Home page</h1>
             <Link to='/users'>Users list</Link>
+            <Outlet/>
         </>
     );
 };
@@ -23,13 +32,14 @@ const UsersList = () => {
         <>
             <h1>Users list</h1>
             <Link to='/'>Home page</Link>
-            {users.map((u, i) => (
-                <ul key={i}>
-                    <li>
-                        <Link to={`/users/${u}`}><p>User {u}</p></Link>
-                    </li>
-                </ul>
-            ))}
+            <ul>
+                {users.map((u, i) => (
+                        <li key={i}>
+                            <Link to={`${u}`}><p>User {u}</p></Link>
+                        </li>
+                    ),
+                )}
+            </ul>
         </>
     );
 };
@@ -46,7 +56,6 @@ const UserProfile = () => {
             <p>
                 <Link to='/users'>Users List</Link>
             </p>
-
         </>
     );
 };
@@ -69,17 +78,34 @@ const UserProfileEdit = () => {
     );
 };
 
+const routes = [
+        {path: '', element: <HomePage/>},
+        {
+            path: 'users',
+            element: <UsersLayout/>,
+            children: [
+                {path: '', element: <UsersList/>},
+                {
+                    path: ':userId',
+                    children: [
+                        {path: '', element: <Navigate to='profile'/>},
+                        {path: 'profile', element: <UserProfile/>},
+                        {path: 'profile/edit', element: <UserProfileEdit/>},
+                        {path: '*', element: <UserProfile/>},
+                    ],
+                },
+            ],
+        },
+        {path: '*', element: <Navigate to='/'/>},
+    ]
+;
+
 function App() {
-    return (<>
-        <Switch>
-            <Route path='/users/:userId/profile/edit' component={UserProfileEdit}/>
-            <Route path='/users/:userId/profile' component={UserProfile}/>
-            <Redirect from='/users/:userId' to='/users/:userId/profile'/>
-            <Route path='/users' component={UsersList}/>
-            <Route exact path='/' component={HomePage}/>
-            <Redirect from='*' to='/'/>
-        </Switch>
-    </>);
+    const elements = useRoutes(routes);
+    return (
+        <>
+            {elements}
+        </>);
 }
 
 export default App;
